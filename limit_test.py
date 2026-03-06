@@ -7,6 +7,7 @@ import plots
 import utils
 import sys
 import torch
+import os
 
 np.random.seed(1)
 
@@ -19,7 +20,7 @@ init = 'identity' #Initialize from continuum solution
 init = 'random' #Initialize at random
 
 #Gaussian cluster means
-c1,c2 = 0.0,0.0
+c1,c2 = -0.5,0.5
 
 #Gaussian clusters
 def rho(x):
@@ -71,9 +72,16 @@ X = utils.rejection_sample(n,rho)
 W = eta(distance.cdist(X,X,'euclidean')/(eps*sigma(X)))
 W[range(n),range(n)]=0
 
-#Run t-SNE
-Z = np.interp(X,x,T/eps) #To initialize from continuum solution
-Y,loss = tsne_torch(Z,W,h=n,num_iter=100000,dim=1,init=init,use_accel=use_accel)
+#Run t-SNE or load if experiment saved
+fname = 'data/tsne_%d_%s_%.2f_%.2f.npz'%(n,init,c1,c2)
+if os.path.isfile(fname):
+    M = np.load(fname)
+    Y = M['Y']
+    loss = M['loss']
+else:
+    Z = np.interp(X,x,T/eps) #To initialize from continuum solution
+    Y,loss = tsne_torch(Z,W,h=n,num_iter=10000,dim=1,init=init,use_accel=use_accel)
+    np.savez_compressed(fname,Y=Y,loss=loss)
 
 #Save losses
 np.savez_compressed('data/loss_%d_%s_%.2f_%.2f.npz'%(n,init,c1,c2),loss=loss)
@@ -87,8 +95,8 @@ Y *= eps
 
 #Plot map T
 plt.figure()
-plt.plot(x,T,label='Continuum Limit')
 plt.plot(X[:,0],Y[:,0],linewidth=1,label='t-SNE')
+plt.plot(x,T,label='Continuum Limit')
 plt.legend(loc='upper left')
 plots.savefig('figs/tsne_exp_T_%d_%s_%.2f_%.2f.pdf'%(n,init,c1,c2),axis=True,grid=True)
 

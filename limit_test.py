@@ -1,12 +1,14 @@
 import graphlearning as gl
 import numpy as np 
 import matplotlib.pyplot as plt
-from tsne import tsne, tsne_torch, tsne_nnet
+from tsne import tsne, tsne_torch
 from scipy.spatial import distance
 import plots
 import utils
 import sys
 import torch
+
+#Parameters 
 
 exit_early = False
 no_accel = False
@@ -79,6 +81,7 @@ plt.title("T")
 
 if exit_early:
     sys.exit(1)
+
 #Generate 1D data
 n = 1000
 #eps = 2*(1/n)**(1/4)
@@ -98,7 +101,6 @@ W[range(n),range(n)]=0
 #Run t-SNE
 Z = np.interp(X,x,T/eps) #To initialize from continuum solution
 Y = tsne_torch(Z,W,h=n,num_iter=100000,dim=1,init=init,use_accel=use_accel)
-#Y = tsne_nnet(X,W,h=1,num_iter=1000,dim=1,use_accel=use_accel)
 
 #Check if Y flipped
 if Y[0,:] > Y[-1,:]:

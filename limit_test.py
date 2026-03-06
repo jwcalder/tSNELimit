@@ -9,7 +9,6 @@ import sys
 import torch
 import os
 import argparse
-
 np.random.seed(1)
 
 #Command line argument parsing
@@ -25,12 +24,9 @@ no_accel = args.accel  #Turn off GPU acceleration
 use_accel = not no_accel and torch.accelerator.is_available()
 
 #Initialization
-init = args.init
-#init = 'identity' #Initialize from continuum solution
-#init = 'random' #Initialize at random
+init = args.init #identity or random
 
 #Gaussian cluster means
-#c1,c2 = -0.1,0.1
 c1,c2 = float(args.c1),float(args.c2)
 
 #Print out parameters
@@ -48,7 +44,7 @@ def rho(x):
     r = (0.4*np.exp(-100*(x - c1)**2) +  0.4*np.exp(-100*(x - c2)**2))/(s*np.sqrt(2*np.pi))
     return r + 0.1
 
-#Support of eta should be [-1,1]
+#Support of eta is [-1,1]
 def eta(z):
     return np.maximum(3*(1 - z**2)/4,0)
 
@@ -65,22 +61,18 @@ u,hu,x,rhox,ux,T = utils.gen_solve(rho,eta,sigma,use_eta=True)
 plt.figure()
 k = len(u)>>1
 plt.plot(u[:k],hu[:k])
-#plt.title('h(u)')
 plots.savefig('figs/hu.pdf',axis=True,grid=True)
 
 plt.figure()
 plt.plot(x,rhox)
-#plt.title('rho(x)')
 plots.savefig('figs/rho_%.2f_%.2f.pdf'%(c1,c2),axis=True,grid=True)
 
 plt.figure()
 plt.plot(x,ux)
-#plt.title("u = T'")
 plots.savefig('figs/Tp_%.2f_%.2f.pdf'%(c1,c2),axis=True,grid=True)
 
 plt.figure()
 plt.plot(x,T)
-#plt.title("T")
 plots.savefig('figs/T_%.2f_%.2f.pdf'%(c1,c2),axis=True,grid=True)
 
 #Generate Data to solve discrete equation
@@ -100,7 +92,7 @@ if os.path.isfile(fname):
     loss = M['loss']
 else:
     Z = np.interp(X,x,T/eps) #To initialize from continuum solution
-    Y,loss = tsne_torch(Z,W,h=n/2,num_iter=10000,dim=1,init=init,use_accel=use_accel)
+    Y,loss = tsne_torch(Z,W,h=n/5,num_iter=100000,dim=1,init=init,use_accel=use_accel)
     np.savez_compressed(fname,Y=Y,loss=loss)
 
 #Save losses

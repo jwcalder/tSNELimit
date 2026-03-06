@@ -16,7 +16,6 @@ def gen_solve(rho,eta,sigma,du=1e-6,delta=0.01,dx=0.001,return_all=True,tol=1e-1
     u = np.arange(0,10,du)
 
     if use_eta:
-        print('Using precomputed h')
         u[0]=1
         hu = 3*(u+1/u) * (1 - np.arctan(u)/u) - u 
         hu[0]=0
@@ -45,7 +44,6 @@ def gen_solve(rho,eta,sigma,du=1e-6,delta=0.01,dx=0.001,return_all=True,tol=1e-1
         #lhs[0]=0
         #ux[0]=0
         rhs = B(x,ux/sigmax,rhox)*rhox*sigmax
-        print('Error=',np.max(np.abs(lhs-rhs)))
 
     #Undo transformation
     ux = ux/sigmax

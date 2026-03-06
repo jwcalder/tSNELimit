@@ -91,6 +91,7 @@ def tsne_torch(X,W,h=1,num_iter=1000,dim=2,init='random',use_accel=False):
 
     optimizer = optim.SGD([Y], lr=h)
 
+    loss_vals = []
     #Main gradient descent loop
     for i in range(num_iter):
         optimizer.zero_grad()
@@ -99,12 +100,13 @@ def tsne_torch(X,W,h=1,num_iter=1000,dim=2,init='random',use_accel=False):
         A = torch.sum(P*torch.log(1 + Q))
         R = torch.log(torch.sum(1/(1 + Q))-n)
         loss = A + R
+        loss_vals += [loss.detach().cpu().item()]
         loss.backward()
         optimizer.step()
         if i % int(num_iter/100) == 0:
             print(i,loss.detach().item(),A.detach().item(),R.detach().item())
 
-    return Y.detach().cpu().numpy()
+    return Y.detach().cpu().numpy(), loss_vals
 
 
 def tsne(X,perplexity=50,h=1,alpha=50,num_early=100,num_iter=1000,P=None,dim=2,init='random'):

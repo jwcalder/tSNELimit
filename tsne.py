@@ -4,19 +4,6 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Net(nn.Module):
-    def __init__(self, num_hidden=32):
-        super(Net, self).__init__()
-        self.n = num_hidden
-        self.fc1 = nn.Linear(1,num_hidden)
-        self.fc2 = nn.Linear(num_hidden,num_hidden)
-        self.fc3 = nn.Linear(num_hidden,1)
-
-    def forward(self, x):
-        x = F.softplus(self.fc1(x))
-        x = F.softplus(self.fc2(x))
-        return self.fc3(x)
-
 def perp(p):
     "Perplexity"
 
@@ -60,59 +47,6 @@ def GL(W):
     "Returns Graph Laplacian for weight matrix W"
     deg = W@np.ones(W.shape[0])
     return np.diag(deg) - W
-
-def tsne_nnet(X,W,h=1,num_iter=1000,dim=2,use_accel=False):
-    """t-SNE embedding with neural net
-
-    Args:
-        X: Data cloud
-        W: Weight matrix
-        h: Time step
-        num_iter: Total number of iterations
-        dim: dimension
-        use_accel: Whether to use GPU
-
-    Returns:
-        Y: Embedded points
-    """
-
-    if use_accel:
-        device = torch.accelerator.current_accelerator()
-    else:
-        device = torch.device("cpu")
-
-
-    n = X.shape[0]
-
-    #Normalize by degree
-    deg = W@np.ones(n)
-    P = (1/n)*np.diag(1/deg)@W
-
-    P = torch.from_numpy(P).float().to(device)
-    X = torch.from_numpy(X).float().to(device)
-
-
-    model = Net().to(device)
-    optimizer = optim.Adadelta(model.parameters(), lr=h)
-
-    model.train()
-    #Main gradient descent loop
-    for i in range(num_iter):
-        optimizer.zero_grad()
-        Y = model(X)
-        Q = torch.cdist(Y,Y,p=2.0)
-        Q = Q**2
-        A = torch.sum(P*torch.log(1 + Q))
-        #print('Attraction',A.detach().item())
-        R = torch.log(torch.sum(1/(1 + Q)))
-        #print('Repulsion',R.detach().item())
-        loss = A + R
-        loss.backward()
-        optimizer.step()
-        if i % int(num_iter/10) == 0:
-            print(i,loss.detach().item())
-
-    return Y.detach().cpu().numpy()
 
 
 def tsne_torch(X,W,h=1,num_iter=1000,dim=2,init='random',use_accel=False):

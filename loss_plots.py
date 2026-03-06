@@ -16,6 +16,8 @@ for file_path in directory_path.glob(extension):
         loss_random = M['loss']
         M = np.load(identity_name)
         loss_identity = M['loss']
+
+        plt.figure()
         plt.plot(loss_random,label="Random Initialization")
         plt.plot(loss_identity,label="Continuum Initialization")
         plt.xscale('log')

@@ -8,19 +8,39 @@ import utils
 import sys
 import torch
 import os
+import argparse
 
 np.random.seed(1)
 
+#Command line argument parsing
+parser = argparse.ArgumentParser(description='t-SNE Continuum Limit Simulations')
+parser.add_argument('--no_accel', action="store", dest='accel', default=False)
+parser.add_argument('--init', action="store", dest='init', default='identity')
+parser.add_argument('--c1', action="store", dest='c1', default=0.0)
+parser.add_argument('--c2', action="store", dest='c2', default=0.0)
+args = parser.parse_args()
+
 #Parameters 
-no_accel = False #Turn off GPU acceleration
+no_accel = args.accel  #Turn off GPU acceleration
 use_accel = not no_accel and torch.accelerator.is_available()
 
 #Initialization
-init = 'identity' #Initialize from continuum solution
-init = 'random' #Initialize at random
+init = args.init
+#init = 'identity' #Initialize from continuum solution
+#init = 'random' #Initialize at random
 
 #Gaussian cluster means
-c1,c2 = -0.5,0.5
+#c1,c2 = -0.1,0.1
+c1,c2 = float(args.c1),float(args.c2)
+
+#Print out parameters
+if use_accel:
+    print("Using GPU acceleration.")
+if init == 'random':
+    print("Using random initialization.")
+if init == 'identity':
+    print("Using Continuum limit initialization.")
+print("Gaussian means are (%.2f,%.2f)."%(c1,c2))
 
 #Gaussian clusters
 def rho(x):
@@ -80,7 +100,7 @@ if os.path.isfile(fname):
     loss = M['loss']
 else:
     Z = np.interp(X,x,T/eps) #To initialize from continuum solution
-    Y,loss = tsne_torch(Z,W,h=n,num_iter=10000,dim=1,init=init,use_accel=use_accel)
+    Y,loss = tsne_torch(Z,W,h=n/2,num_iter=10000,dim=1,init=init,use_accel=use_accel)
     np.savez_compressed(fname,Y=Y,loss=loss)
 
 #Save losses
@@ -95,8 +115,8 @@ Y *= eps
 
 #Plot map T
 plt.figure()
-plt.plot(X[:,0],Y[:,0],linewidth=1,label='t-SNE')
-plt.plot(x,T,label='Continuum Limit')
+plt.plot(X[:,0],Y[:,0],label='t-SNE')
+plt.plot(x,T,linestyle='--',label='Continuum Limit')
 plt.legend(loc='upper left')
 plots.savefig('figs/tsne_exp_T_%d_%s_%.2f_%.2f.pdf'%(n,init,c1,c2),axis=True,grid=True)
 
@@ -111,5 +131,3 @@ plt.legend(loc='upper left')
 plt.ylim((0,5))
 plots.savefig('figs/tsne_exp_Tp_%d_%s_%.2f_%.2f.pdf'%(n,init,c1,c2),axis=True,grid=True)
 
-
-plt.show()

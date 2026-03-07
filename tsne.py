@@ -58,7 +58,7 @@ def tsne_torch(X,W,h=1,num_iter=1000,dim=2,init='random',use_accel=False):
         h: Time step
         num_iter: Total number of iterations
         dim: dimension
-        init: 'random' or 'identity'
+        init: 'random', 'identity', or 'continuum'
         use_accel: Whether to use GPU
 
     Returns:

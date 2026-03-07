@@ -14,7 +14,7 @@ np.random.seed(1)
 #Command line argument parsing
 parser = argparse.ArgumentParser(description='t-SNE Continuum Limit Simulations')
 parser.add_argument('--no_accel', action="store", dest='accel', default=False)
-parser.add_argument('--init', action="store", dest='init', default='identity')
+parser.add_argument('--init', action="store", dest='init', default='continuum')
 parser.add_argument('--c1', action="store", dest='c1', default=0.0)
 parser.add_argument('--c2', action="store", dest='c2', default=0.0)
 args = parser.parse_args()
@@ -24,7 +24,7 @@ no_accel = args.accel  #Turn off GPU acceleration
 use_accel = not no_accel and torch.accelerator.is_available()
 
 #Initialization
-init = args.init #identity or random
+init = args.init #continuum, identity or random
 
 #Gaussian cluster means
 c1,c2 = float(args.c1),float(args.c2)
@@ -34,8 +34,10 @@ if use_accel:
     print("Using GPU acceleration.")
 if init == 'random':
     print("Using random initialization.")
-if init == 'identity':
+if init == 'continuum':
     print("Using Continuum limit initialization.")
+if init == 'identity':
+    print("Using Identity initialization.")
 print("Gaussian means are (%.2f,%.2f)."%(c1,c2))
 
 #Gaussian clusters
@@ -91,7 +93,10 @@ if os.path.isfile(fname):
     Y = M['Y']
     loss = M['loss']
 else:
-    Z = np.interp(X,x,T/eps) #To initialize from continuum solution
+    if init == 'continuum':
+        Z = np.interp(X,x,T/eps) #To initialize from continuum solution
+    else:
+        Z = np.linspace(0,1.5,n)[:,None]/eps #Identity initialization
     Y,loss = tsne_torch(Z,W,h=n/5,num_iter=100000,dim=1,init=init,use_accel=use_accel)
     np.savez_compressed(fname,Y=Y,loss=loss)
 

@@ -1,4 +1,4 @@
-# tSNELimit
+# On the continuum limit of t-SNE for data visualization
 
 This code is for reproducing the numerical experiments in the paper 
 

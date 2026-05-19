@@ -20,6 +20,10 @@ for file_path in directory_path.glob(extension):
         M = np.load(continuum_name)
         loss_continuum = M['loss']
 
+        print('Random Loss: Min: %.2f, Decrease: %.2f'%(np.min(loss_random),100*(loss_random[0]/np.min(loss_random))-100))
+        print('Identity Loss: Min: %.2f, Decrease: %.2f'%(np.min(loss_identity),100*(loss_identity[0]/np.min(loss_identity))-100))
+        print('Continuum Loss: Min: %.2f, Decrease: %.2f'%(np.min(loss_continuum),100*(loss_continuum[0]/np.min(loss_continuum))-100))
+
         plt.figure()
         plt.plot(loss_random,label="Random Initialization")
         plt.plot(loss_identity,label="Identity Initialization")
